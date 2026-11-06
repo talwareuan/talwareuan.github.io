@@ -1,11 +1,29 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-9QNRsv3jgB3LGxAn9RUfVoiYc3Q+6Fhi2pQBMJFpmY0='; style-src 'unsafe-inline'">
 <title>Returning to Tally</title>
 <style>html,body{background:#000;color:#F2F2F2;font-family:system-ui,sans-serif;margin:0;height:100%;display:flex;align-items:center;justify-content:center}a{color:#E0B861}</style></head>
 <body><p id="m">Returning to Tally…</p>
 <script>
-// Static relay: forwards the bank authorisation result to the Tally app. Stores and sends nothing.
-var target = "tally://bank-callback" + window.location.search;
-window.location.replace(target);
-setTimeout(function(){ document.getElementById("m").innerHTML = '<a href="' + target.replace(/"/g,"") + '">Open Tally</a>'; }, 1500);
+(function () {
+  // Static relay. Forwards only code, state and error to the Tally app. Stores and sends nothing else.
+  var src = new URLSearchParams(window.location.search);
+  var out = new URLSearchParams();
+  ["code", "state", "error", "error_description"].forEach(function (k) {
+    var v = src.get(k);
+    if (v !== null && /^[A-Za-z0-9._~+\/=:\- ]{1,2048}$/.test(v)) out.set(k, v);
+  });
+  var target = "tally://bank-callback?" + out.toString();
+  history.replaceState(null, "", window.location.pathname);
+  window.location.replace(target);
+  setTimeout(function () {
+    var m = document.getElementById("m");
+    m.textContent = "";
+    var a = document.createElement("a");
+    a.href = target;
+    a.textContent = "Open Tally";
+    m.appendChild(a);
+  }, 1500);
+})();
 </script></body></html>
